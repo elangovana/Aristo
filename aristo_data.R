@@ -12,8 +12,8 @@ aristo_data <- function(aristo_file, rows_to_include=NULL){
   input <- dataset[, !colnames(dataset) %in%  ycolnames]
   colnames(input) <- c("question", "A", "B", "C", "D")
   
-  out <- list(input = input ,                       
-              y = if(sum(!is.na(dataset[, ycolnames]))!=0){ dataset[, ycolnames]} else{ NULL }
+  out <- list(input = input   ,                       
+              y = if(ycolnames %in% colnames(dataset)){ dataset[, ycolnames]} else{ NULL }
              )
   
   class(out) <- "aristo_data"  
