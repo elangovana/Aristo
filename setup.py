@@ -8,5 +8,5 @@ setup(
     license='',
     author='Team bluebird',
     author_email='',
-    description='', install_requires=['pandas', ]
+    description='', install_requires=['pandas', 'nltk', ]
 )
