@@ -9,6 +9,6 @@ class IntegrationTestAristoData(unittest.TestCase):
         data_file_path="../../../inputdata/training_set.tsv"
         self._aristo_data = AristoData(data_file_path)
 
-    def test_should_parse_data(self):
-        pass
+    def test_should_print_summary(self):
+        self._aristo_data.summary()
 
