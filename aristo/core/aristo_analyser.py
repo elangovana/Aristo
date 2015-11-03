@@ -18,7 +18,9 @@ class aristo_analyser:
         return words
 
     def aristo_get_most_common_words(self, data, top_n_most_common):
-        fdist = nltk.FreqDist(self.aristo_tokenise_words(data))
+        words = self.aristo_tokenise_words(data)
+        words = [word.lower() for word in words]
+        fdist = nltk.FreqDist(words)
         return fdist.most_common(top_n_most_common)
 
     def aristo_write_most_common_words_to_file(self, data, top_n_most_common, file):
