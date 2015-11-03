@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='aristo',
@@ -8,5 +8,5 @@ setup(
     license='',
     author='Team bluebird',
     author_email='',
-    description='', requires=['pandas', ]
+    description='', install_requires=['pandas', ]
 )
