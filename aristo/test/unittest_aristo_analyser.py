@@ -27,3 +27,15 @@ class UnitTestAristoAnalyser(unittest.TestCase):
                  "My friend is anna"], .5):
             similar_sentences.append(sentence)
         self.assertEqual(1, len(similar_sentences))
+
+    def test_should_get_top_n_similar_sentences(self):
+        similar_sentences = []
+        sentences_to_search = [
+            "In the eighteenth mak, it was qweqwe qeqweq to regard man as mjkjk",
+            "In the 8909 century, it was often wqew to regard man as clowork wyyywuquw",
+            "My friend is anna"]
+        for sentence in self.sut.aristo_get_top_n_similar_sentences(
+                "In the eighteenth century it was often convenient to regard man as a clockwork automaton.",
+                sentences_to_search, 1):
+            similar_sentences.append(sentence)
+        self.assertEqual(sentences_to_search[1], similar_sentences[0])

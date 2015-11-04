@@ -6,9 +6,19 @@ import csv
 import nltk.tokenize.punkt
 import nltk.stem.snowball
 import string
+from operator import itemgetter, attrgetter
+
 
 class AristoAnalyser:
+    """
+    Analyses text using NLTK toolkit
+    """
     def aristo_get_named_entities(self, text):
+        """
+        Parses the texts to obtain named entities
+        :param text: The text to parse
+        :return:returns a named entity treexw
+        """
         custom_sent_tokenizer = PunktSentenceTokenizer(text)
         tokenized = custom_sent_tokenizer.tokenize(text)
         for i in tokenized[5:]:
@@ -49,14 +59,14 @@ class AristoAnalyser:
     def aristo_write_most_common_nouns_to_file(self, data, top_n_most_common, file):
         AristoAnalyser._write_tuple_to_file(self.aristo_get_most_common_nouns(data, top_n_most_common), file)
 
-    def aristo_get_similar_sentences(self, main_sentence, list_of_sentences, similarity_threshold):
+    def aristo_get_similar_sentences(self, main_sentence, list_of_sentences, similarity_score_threshold):
         for sentence in list_of_sentences:
-            if AristoAnalyser._is_ci_token_stopword_set_match(main_sentence, sentence, similarity_threshold) :
+            if AristoAnalyser._get_similarity_score(main_sentence, sentence) >= similarity_score_threshold  :
                 yield sentence
 
 
     @staticmethod
-    def _is_ci_token_stopword_set_match(a, b, threshold=0.5):
+    def _get_similarity_score(a, b):
         stopwords = nltk.corpus.stopwords.words('english')
         stopwords.extend(string.punctuation)
         stopwords.append('')
@@ -70,4 +80,21 @@ class AristoAnalyser:
 
         # Calculate Jaccard similarity
         ratio = len(set(tokens_a).intersection(tokens_b)) / float(len(set(tokens_a).union(tokens_b)))
-        return (ratio >= threshold)
+        return (ratio)
+
+
+    def aristo_get_top_n_similar_sentences(self, main_sentence, list_of_sentences, top_n=1):
+        """
+        This gets the top n sentences most similar to the main sentence.
+        :param main_sentence: The sentence which needs to compared.
+        :param list_of_sentences: The list of sentences against which the main sentence will be compared against.
+        :param top_n: The number of top N sentences to return
+        :return: Returns the top N most similar sentences
+        """
+        sentence_sim_scores = []
+        for sentence in list_of_sentences:
+           sentence_sim_scores.append( (sentence, AristoAnalyser._get_similarity_score(main_sentence, sentence)))
+        print(sentence_sim_scores)
+        sentence_sim_scores = sorted(sentence_sim_scores, key=lambda tup: tup[1], reverse=True)[0:top_n][0]
+        print(sentence_sim_scores)
+        return sentence_sim_scores
