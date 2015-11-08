@@ -2,11 +2,10 @@ from aristo.core.aristo_data import AristoData
 from aristo.core.similarity_pipeline import SimilarityPipeline
 from aristo.core.text_analyser import TextAnalyser
 import os
-import time
 
-def run_train_data(train_data_csv):
-    aristo_train_data = AristoData(train_data_csv, range(0,2000))
-    aristo_test_data = AristoData(train_data_csv, range(100,110))
+def run_train_data(train_data_csv, test_data_csv):
+    aristo_train_data = AristoData(train_data_csv)
+    aristo_test_data = AristoData(test_data_csv)
     aristo_test_data.print_summary()
     aristo_train_data.print_summary()
     pipeline = SimilarityPipeline(train_data=aristo_train_data, test_data=aristo_test_data)
@@ -21,4 +20,4 @@ def run_train_data(train_data_csv):
 
 
 
-run_train_data(os.path.join(os.path.dirname(__file__),"../../../inputdata/training_set.tsv"))
+run_train_data(os.path.join(os.path.dirname(__file__),"../../../inputdata/training_set.tsv"), os.path.join(os.path.dirname(__file__),"../../../inputdata/validation_set.tsv"))

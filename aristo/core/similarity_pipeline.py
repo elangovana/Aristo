@@ -23,6 +23,7 @@ class SimilarityPipeline:
 
     def write_to_disk(self, directory):
         self.predictions.to_csv(os.path.join(directory, "predictions.csv"))
+        self.predictions["answer"].to_csv(os.path.join(directory, "submission_predictions.csv"), header=["correctAnswer"])
         test_data =  self._test_data.x.join(self._test_data.y) if self._test_data.y is not None else self._test_data.x
         test_data.join(self.predictions, rsuffix="pred.").to_csv(os.path.join(directory, "test_data_with_predictions.csv"))
 
@@ -35,8 +36,8 @@ class SimilarityPipeline:
             train_tuples = self._train_data.x.itertuples()
             top_similar_train_row = \
                 self._analyser.aristo_get_top_n_similar_sentences(test_sentence, train_tuples, 1,
-                                                                  .25,
-                                                                  lambda x: x[question_index + 1])
+                                                                  similarity_threshold= 0,
+                                                                  sentence_extractor= lambda x: x[question_index + 1])
             if len( top_similar_train_row ) > 0:
                 self._calculate_correct_answer(test_row, top_similar_train_row[0])
 

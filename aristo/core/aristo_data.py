@@ -24,15 +24,20 @@ class AristoData:
         self._dataframe.set_index("id", inplace=True)
         self.x = self._dataframe[['question', 'answerA', 'answerB', 'answerC', 'answerD']]
         self.x.columns = ['question','A','B','C','D']
-        self.y = self._dataframe[['correctAnswer']]
-        self.y.columns =["answer"]
+        try:
+            self.y = self._dataframe[['correctAnswer']]
+            self.y.columns =["answer"]
+        except KeyError as ky:
+            print(ky)
+            self.y = None
 
     def print_summary(self):
         """
         Prints a summary of the the challenge data
         """
         print(self.x.info())
-        print(self.y.info())
+        if (self.y is not None):
+            print(self.y.info())
 
     def get_all_questions_as_raw(self):
         with StringIO() as all_questions:
