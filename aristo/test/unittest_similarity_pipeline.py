@@ -4,6 +4,7 @@ from  unittest.mock import Mock
 from aristo.core.aristo_data import AristoData
 import pandas as pd
 from aristo.core.similarity_pipeline import SimilarityPipeline
+import os
 
 test_data = [
     (
@@ -26,6 +27,7 @@ test_data = [
 
 ]
 
+
 def create_mock_train_test_aristo_data(train_data, test_question):
     mock_train_data = Mock(AristoData)
     mock_train_data.x = pd.DataFrame.from_records(train_data, index=["id"],
@@ -35,7 +37,9 @@ def create_mock_train_test_aristo_data(train_data, test_question):
     mock_test_data = Mock(AristoData)
     mock_test_data.x = pd.DataFrame.from_records([test_question], index=["id"],
                                                  columns=("id", "question", "A", "B", "C", "D"))
+    mock_test_data.y = None
     return (mock_train_data, mock_test_data)
+
 
 @pytest.mark.parametrize("train_data,test_question,expected_answer", test_data)
 def test_should_predict_the_correct_answer(train_data, test_question, expected_answer):
@@ -48,5 +52,17 @@ def test_should_predict_the_correct_answer(train_data, test_question, expected_a
     assert sut.predictions.loc[question_id, "answer"] == expected_answer
 
 
+@pytest.mark.parametrize("train_data,test_question,expected_answer", test_data)
+def test_should_write_predictions_to_file(tmpdir, train_data, test_question, expected_answer):
+    (mock_train_data, mock_test_data) = create_mock_train_test_aristo_data(train_data, test_question)
+    sut = SimilarityPipeline(mock_train_data, mock_test_data)
+    sut.write_to_disk(tmpdir.dirname)
+    assert os.path.exists(os.path.join(tmpdir.dirname, "predictions.csv")) == True
 
 
+@pytest.mark.parametrize("train_data,test_question,expected_answer", test_data)
+def test_should_write_test_data_with_predictions_to_file(tmpdir, train_data, test_question, expected_answer):
+    (mock_train_data, mock_test_data) = create_mock_train_test_aristo_data(train_data, test_question)
+    sut = SimilarityPipeline(mock_train_data, mock_test_data)
+    sut.write_to_disk(tmpdir.dirname)
+    assert os.path.exists(os.path.join(tmpdir.dirname, "test_data_with_predictions.csv")) == True
