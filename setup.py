@@ -8,5 +8,7 @@ setup(
     license='',
     author='Team bluebird',
     author_email='',
-    description='', install_requires=['pandas', 'nltk', ]
+    description='',
+    tests_require = ['pytest', ],
+    install_requires=['pandas', 'nltk', 'pytest', ]
 )

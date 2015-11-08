@@ -1,5 +1,5 @@
 import unittest
-from aristo.core.aristo_analyser import (AristoAnalyser)
+from aristo.core.text_analyser import (TextAnalyser)
 
 
 
@@ -7,7 +7,7 @@ from aristo.core.aristo_analyser import (AristoAnalyser)
 
 class IntegrationTestAristoAnalyser(unittest.TestCase):
     def setUp(self):
-        self.sut = AristoAnalyser()
+        self.sut = TextAnalyser()
         self.data = "When athletes begin to exercise, their heart rates and respiration rates increase. "
 
     def test_should_tokenise_words(self):
