@@ -9,6 +9,6 @@ setup(
     author='Team bluebird',
     author_email='',
     description='',
-    tests_require = ['pytest', ],
-    install_requires=['pandas', 'nltk', 'pytest', ]
+    tests_require = ['pytest', 'coverage'],
+    install_requires=['pandas', 'nltk', 'pytest','lupyne', ]
 )
