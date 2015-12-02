@@ -41,7 +41,7 @@ class AristoData:
 
     def get_all_questions_as_raw(self):
         with StringIO() as all_questions:
-            self.x.to_csv(all_questions)
+            self.x[['question', 'A', 'B', 'C', 'D']].to_csv(all_questions, index=False, header=False)
             all_str_questions = all_questions.getvalue()
         return all_str_questions
 
