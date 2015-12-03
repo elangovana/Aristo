@@ -24,8 +24,3 @@ def test_should_download_articles(tmpdir, articles, batch_size, expected_answer)
         actual = actual + doc.xpath('count(/*[local-name() = "mediawiki"]/*[local-name() = "page"])')
     assert actual == expected_answer
 
-def test_dummy():
-    file ="/Users/aparnaelangovan/Documents/Programming/python/aristo/repo/aristo/core/../../../corpus/mediafile_20151202_220624_1.xml"
-    doc = lxml.etree.parse(file)
-    actual = doc.xpath('count(/*[local-name() = "mediawiki"]/*[local-name() = "page"])')
-    assert actual == 10

@@ -9,8 +9,7 @@ def download_corpus (data_csv):
     aristo_data = AristoData(data_csv)
     corpus_file=os.path.join(os.path.dirname(__file__),"../../../corpus/mediafile_{}.xml".format(time.strftime('%Y%m%d_%H%M%S')))
     analyser = TextAnalyser()
-    word_counts= analyser.aristo_get_most_common_words(aristo_data.get_all_questions_as_raw(), 1000000)
-    words = [str(wc[0]) for wc in word_counts]
+    words= analyser.get_words_without_stopwords(aristo_data.get_all_questions_as_raw())
     print(len(words))
     print((words))
     kc = KnowledgeCreator()
@@ -19,4 +18,4 @@ def download_corpus (data_csv):
 
 
 
-download_corpus(os.path.join(os.path.dirname(__file__),"../../../inputdata/training_set.tsv"))
+download_corpus(os.path.join(os.path.dirname(__file__),"../../../inputdata/validation_set.tsv"))

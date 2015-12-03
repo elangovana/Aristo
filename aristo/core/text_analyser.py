@@ -28,12 +28,27 @@ class TextAnalyser:
             namedEnt = nltk.ne_chunk(tagged, binary=False)
             return ((namedEnt))
 
-    def aristo_tokenise_words(self, text):
+    def get_words(self, text):
         words = nltk.word_tokenize(text)
         return words
 
+    def get_words_without_punctuation(self, text):
+        tokenizer = WordPunctTokenizer()
+        tokens = [token.lower().strip(string.punctuation) for token in tokenizer.tokenize(text)]
+        return tokens
+
+
+    def get_words_without_stopwords(self, text):
+        stopwords = nltk.corpus.stopwords.words('english')
+        stopwords.extend(string.punctuation)
+        stopwords.append('')
+        tokenizer = WordPunctTokenizer()
+        tokens = [token.lower().strip(string.punctuation) for token in tokenizer.tokenize(text) \
+                  if token.lower().strip(string.punctuation) not in stopwords]
+        return tokens
+
     def aristo_get_most_common_words(self, data, top_n_most_common):
-        words = self.aristo_tokenise_words(data)
+        words = self.get_words(data)
         words = [word.lower() for word in words]
         fdist = nltk.FreqDist(words)
         return fdist.most_common(top_n_most_common)
@@ -50,9 +65,9 @@ class TextAnalyser:
                 csv_out.writerow(row)
 
     def aristo_get_most_common_nouns(self, data, top_n):
-        words = self.aristo_tokenise_words(data)
+        words = self.get_words(data)
         tagged_words = nltk.pos_tag(words)
-        words = [word.lower() for (word, tag) in tagged_words if tag in ('NN', "NNS", "VB", "VBP")]
+        words = [word.lower() for (word, tag) in tagged_words if tag in ('NN', "NNS", "VB", "VBP", "ADJ", "ADV")]
         fdist = nltk.FreqDist(words)
         return fdist.most_common(top_n)
 
@@ -78,8 +93,8 @@ class TextAnalyser:
                     if token.lower().strip(string.punctuation) not in stopwords]
 
         # Calculate Jaccard similarity
-        ratio=0
-        if len(set(tokens_a).union(tokens_b) ) >0 :
+        ratio = 0
+        if len(set(tokens_a).union(tokens_b)) > 0:
             ratio = len(set(tokens_a).intersection(tokens_b)) / float(len(set(tokens_a).union(tokens_b)))
         return (ratio)
 
@@ -95,15 +110,14 @@ class TextAnalyser:
         """
         item_sim_scores = []
         for item in iteratable_collection:
-
             item_sim_scores.append(
                 (item, TextAnalyser._get_similarity_score(main_sentence, sentence_extractor(item))))
 
         item_sim_scores = [(item, score) for (item, score) in item_sim_scores if
-                               score >= similarity_threshold]
+                           score >= similarity_threshold]
 
         top_n = top_n if len(item_sim_scores) >= top_n else len(item_sim_scores)
         item_sim_scores = [] if top_n == 0 else \
-        sorted(item_sim_scores, key=lambda tup: tup[1], reverse=True)[0:top_n][0]
+            sorted(item_sim_scores, key=lambda tup: tup[1], reverse=True)[0:top_n][0]
 
         return item_sim_scores

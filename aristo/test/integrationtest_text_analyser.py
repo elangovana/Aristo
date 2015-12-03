@@ -11,7 +11,7 @@ class IntegrationTestAristoAnalyser(unittest.TestCase):
         self.data = "When athletes begin to exercise, their heart rates and respiration rates increase. "
 
     def test_should_tokenise_words(self):
-        self.sut.aristo_tokenise_words(self.data)
+        self.sut.get_words(self.data)
 
     def test_should_get_named_entities(self):
             self.sut.aristo_get_named_entities(self.data)
