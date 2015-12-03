@@ -19,3 +19,4 @@ def download_corpus (data_csv):
 
 
 download_corpus(os.path.join(os.path.dirname(__file__),"../../../inputdata/validation_set.tsv"))
+download_corpus(os.path.join(os.path.dirname(__file__),"../../../inputdata/training_set.tsv"))
