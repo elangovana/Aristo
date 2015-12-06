@@ -14,7 +14,7 @@ class SolrWikipediaPipeline:
 
     def __init__(self, data, text_analyser=None):
         self._data = data
-        self.predictions = pd.DataFrame("-", index=self._data.x.index.values, columns=['answer'])
+        self.predictions = pd.DataFrame("-", index=self._data.x.index.values, columns=['answer', "question_key", "A_Key","B_Key","C_Key" , "D_key"])
         if text_analyser is None:
             self._analyser = TextAnalyser()
 
@@ -53,7 +53,7 @@ class SolrWikipediaPipeline:
             for choice in ["A", "B", "C", "D"]:
                 choice_index = self._data.x.columns.get_loc(choice)
                 choice_text = row[choice_index + 1]
-                score = self._get_search_score(question, choice_text)
+                score = self._get_search_score_weighted_question(question, choice_text)
                 if score > max_score:
                     max_score=score
                     correct_answer=choice
@@ -73,6 +73,57 @@ class SolrWikipediaPipeline:
 
         rsp = simplejson.loads(r.text)
         return rsp['response']['docs'][0]['score']
+
+    def _get_search_score_weighted_question(self, question, answer_choice):
+        q_keywords = self._analyser.get_words_without_stopwords(question)
+        a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
+        q_query = ' '.join(q_keywords)
+        qa_query = ' '.join(a_keywords)
+
+        url = 'http://localhost:8983/solr/wikipedia/select?fl=*%2Cscore&wt=json'
+        data = {'limit': 3, 'query': q_query}
+        headers = {'Content-Type': 'application/json'}
+        r = requests.post(url + "&defType=edismax&&qf=title%5E100000+text", simplejson.dumps(data), headers=headers)
+        rsp = simplejson.loads(r.text)
+        top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs'] ]) + ")"
+        print(top_page_ids)
+        url =  url + "&fq=id%3A+" + top_page_ids
+        print(q_query + ":" + qa_query)
+
+        data = {'limit': 10, 'query': qa_query}
+        r = requests.post(url, simplejson.dumps(data), headers=headers)
+
+        rsp = simplejson.loads(r.text)
+        matching_docs =  rsp['response']['docs']
+        score = sum([ d['score'] for d in matching_docs])/len(matching_docs) if (len(matching_docs) > 0) else 0
+        print(score)
+        return score
+
+    def _get_search_score_weighted_answer(self, question, answer_choice):
+        q_keywords = self._analyser.get_words_without_stopwords(question)
+        a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
+        p_query = ' '.join(a_keywords).title()
+        s_query = ' '.join(q_keywords)
+
+        url = 'http://localhost:8983/solr/wikipedia/select?fl=*%2Cscore&wt=json'
+        data = {'limit': 5, 'query': p_query}
+        headers = {'Content-Type': 'application/json'}
+        r = requests.post(url +"&defType=edismax&&qf=title%5E100000+text", simplejson.dumps(data), headers=headers)
+        rsp = simplejson.loads(r.text)
+        if len(rsp['response']['docs']) == 0 : return 0
+        top_page_id = rsp['response']['docs'][0]['id']
+
+        url =  url + "&fq=id%3A+" + top_page_id
+        print(p_query + ":" + s_query)
+
+        data = {'limit': 5, 'query': s_query}
+        r = requests.post(url, simplejson.dumps(data), headers=headers)
+
+        rsp = simplejson.loads(r.text)
+        score = rsp['response']['docs'][0]['score'] if (len(rsp['response']['docs']) > 0) else 0
+        print(score)
+        return score
+
 
     @staticmethod
     def _get_words_from_distribution(words_distribution):

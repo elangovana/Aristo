@@ -21,3 +21,6 @@ class IntegrationTestAristoData(unittest.TestCase):
 
     def test_should_get_all_questions_as_raw(self):
         self.assertTrue(type(self._aristo_data.get_all_questions_as_raw()) is str)
+
+    def test_should_get_all_questions_as_list(self):
+        self.assertEqual(len(self._aristo_data.get_all_questions_answers_as_list()),2500*5)

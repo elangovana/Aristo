@@ -40,10 +40,13 @@ class AristoData:
             print(self.y.info())
 
     def get_all_questions_as_raw(self):
-        with StringIO() as all_questions:
-            self.x[['question', 'A', 'B', 'C', 'D']].to_csv(all_questions, index=False, header=False)
-            all_str_questions = all_questions.getvalue()
-        return all_str_questions
+        return self.get_column_as_raw('question')
+
+    def get_all_questions_answers_as_list(self):
+            return self.x['question'].values.tolist() + self.x['A'].values.tolist() + self.x['B'].values.tolist() \
+                   +self.x['C'].values.tolist() + self.x['D'].values.tolist()
+
+
 
     @staticmethod
     def exclude_rows(dataframe, rows_to_include):
@@ -51,4 +54,10 @@ class AristoData:
             return dataframe
 
         return dataframe.iloc[rows_to_include]
+
+    def get_column_as_raw(self, column_name, join_rows_by="."):
+        with StringIO() as all_questions:
+            (self.x[column_name] + join_rows_by) .to_csv(all_questions, index=False, header=False)
+            all_str_questions = all_questions.getvalue()
+        return all_str_questions
 

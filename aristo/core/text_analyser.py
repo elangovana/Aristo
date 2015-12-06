@@ -47,6 +47,35 @@ class TextAnalyser:
                   if token.lower().strip(string.punctuation) not in stopwords]
         return tokens
 
+    def get_np_chunks(self, text):
+        words = nltk.word_tokenize(text)
+        tagged = nltk.pos_tag(words)
+        chunkgram = r"""Chunk: {(<JJ>*<NN.*>)+}"""
+        chunk_parser = nltk.RegexpParser(chunkgram)
+        chunked = chunk_parser.parse(tagged)
+        return [l for l in self._get_leaves(chunked, "Chunk")]
+
+    def get_nn_chunks(self, text):
+        words = nltk.word_tokenize(text)
+        tagged = nltk.pos_tag(words)
+        chunkgram = r"""Chunk: {(<NN.*>)+}"""
+        chunk_parser = nltk.RegexpParser(chunkgram)
+        chunked = chunk_parser.parse(tagged)
+        return [l for l in self._get_leaves(chunked, "Chunk")]
+
+
+    def _get_leaves(self, tree, node_type):
+        for subtree in tree.subtrees(filter = lambda t: t.label() ==node_type):
+            term = [w for (w,t) in subtree.leaves()]
+            yield term
+
+
+    def get_terms(self,leaves):
+        for leaf in leaves:
+            term = [ w for w,t in leaf]
+            yield term
+
+
     def aristo_get_most_common_words(self, data, top_n_most_common):
         words = self.get_words(data)
         words = [word.lower() for word in words]
