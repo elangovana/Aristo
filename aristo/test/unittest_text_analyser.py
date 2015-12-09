@@ -37,7 +37,7 @@ class UnitTestTextAnalyser(unittest.TestCase):
             "In the eighteenth mak, it was qweqwe qeqweq to regard man as mjkjk",
             "In the 8909 century, it was often wqew to regard man as clowork wyyywuquw",
             "My friend is anna"]
-        for sentence in self.sut.aristo_get_top_n_similar_sentences(
+        for sentence in self.sut.get_top_n_similar_sentences(
                 "In the eighteenth century it was often convenient to regard man as a clockwork automaton.",
                 sentences_to_search, 1):
             similar_sentences.append(sentence)
@@ -50,7 +50,7 @@ class UnitTestTextAnalyser(unittest.TestCase):
             ("In the 8909 century, it was often wqew to regard man as clowork wyyywuquw", 2),
             ("My friend is anna", 3)], columns=("question", "sno"))
 
-        for sentence in self.sut.aristo_get_top_n_similar_sentences(
+        for sentence in self.sut.get_top_n_similar_sentences(
                 "In the eighteenth century it was often convenient to regard man as a clockwork automaton.",
                 sentences_to_search.itertuples(), 1, 0, lambda tup: tup[1]):
             actual_similar_sentences.append(sentence)

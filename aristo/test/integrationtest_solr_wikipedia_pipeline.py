@@ -41,3 +41,5 @@ def test_solr_pipeline_should_calculate_correct_answer(data):
     question_id = data[0]
     assert sut.predictions.loc[question_id, "answer"] == data[6]
 
+
+

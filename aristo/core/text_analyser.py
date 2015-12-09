@@ -105,11 +105,11 @@ class TextAnalyser:
 
     def aristo_get_similar_sentences(self, main_sentence, list_of_sentences, similarity_score_threshold):
         for sentence in list_of_sentences:
-            if TextAnalyser._get_similarity_score(main_sentence, sentence) >= similarity_score_threshold:
+            if TextAnalyser.get_similarity_score(main_sentence, sentence) >= similarity_score_threshold:
                 yield sentence
 
     @staticmethod
-    def _get_similarity_score(a, b):
+    def get_similarity_score(a, b):
         stopwords = nltk.corpus.stopwords.words('english')
         stopwords.extend(string.punctuation)
         stopwords.append('')
@@ -127,7 +127,7 @@ class TextAnalyser:
             ratio = len(set(tokens_a).intersection(tokens_b)) / float(len(set(tokens_a).union(tokens_b)))
         return (ratio)
 
-    def aristo_get_top_n_similar_sentences(self, main_sentence, iteratable_collection, top_n=1,
+    def get_top_n_similar_sentences(self, main_sentence, iteratable_collection, top_n=1,
                                            similarity_threshold=0.0, sentence_extractor=lambda x: x):
         """
         This gets the top n sentences most similar to the main sentence.
@@ -140,7 +140,7 @@ class TextAnalyser:
         item_sim_scores = []
         for item in iteratable_collection:
             item_sim_scores.append(
-                (item, TextAnalyser._get_similarity_score(main_sentence, sentence_extractor(item))))
+                (item, TextAnalyser.get_similarity_score(main_sentence, sentence_extractor(item))))
 
         item_sim_scores = [(item, score) for (item, score) in item_sim_scores if
                            score >= similarity_threshold]

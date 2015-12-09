@@ -35,7 +35,7 @@ class SimilarityPipeline:
             test_sentence = test_row[test_q_index + 1]
             train_tuples = self._train_data.x.itertuples()
             top_similar_train_row = \
-                self._analyser.aristo_get_top_n_similar_sentences(test_sentence, train_tuples, 1,
+                self._analyser.get_top_n_similar_sentences(test_sentence, train_tuples, 1,
                                                                   similarity_threshold= 0,
                                                                   sentence_extractor= lambda x: x[question_index + 1])
             if len( top_similar_train_row ) > 0:
@@ -46,7 +46,7 @@ class SimilarityPipeline:
         correct_answer_column_name = self._train_data.y.loc[top_similar_train_row[0], "answer"]
         correct_answer_column_index = self._train_data.x.columns.get_loc(correct_answer_column_name) + 1
         top_matching_answer = \
-            self._analyser.aristo_get_top_n_similar_sentences(top_similar_train_row[correct_answer_column_index],
+            self._analyser.get_top_n_similar_sentences(top_similar_train_row[correct_answer_column_index],
                                                               test_row[2:6], 1, 0)[0]
         self.predictions.loc[test_row[0]].description = top_matching_answer
         self.predictions.loc[test_row[0]].answer = ["A", "B", "C", "D"][test_row[2:6].index(top_matching_answer)]
