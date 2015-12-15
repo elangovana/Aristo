@@ -6,7 +6,7 @@ import os
 import time
 
 def run_train_data(train_data_csv):
-    #aristo_train_data = AristoData(train_data_csv, range(0,500))
+    aristo_train_data = AristoData(train_data_csv, range(0,500))
     aristo_train_data = AristoData(train_data_csv)
     aristo_train_data.print_summary()
     pipeline = SolrWikipediaPipeline(data=aristo_train_data)

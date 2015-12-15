@@ -1,15 +1,17 @@
 <dataConfig>
-        <dataSource type="FileDataSource" encoding="UTF-8" />
+        <dataSource type="FileDataSource" encoding="UTF-8" datasource="wiki" />
+	<dataSource type="BinFileDataSource" name="pdf" />
+
         <document>
 <entity
 name="document"
       processor="FileListEntityProcessor"
       baseDir="/Users/aparnaelangovan/Documents/Programming/python/aristo/corpus"
-      fileName="mediafile_20151202_221649.*.xml$"
+      fileName=".*.xml$"
       recursive="false"
       rootEntity="false"
       dataSource="null">
-        <entity name="page"
+        <entity name="page" dataSource="wiki"
                 processor="XPathEntityProcessor"
                 stream="true"
                 forEach="/mediawiki/page/"
@@ -26,5 +28,30 @@ name="document"
             <field column="$skipDoc"  regex="^#REDIRECT .*" replaceWith="true" sourceColName="text"/>
        </entity>
 </entity>
-        </document>
+
+       
+  <entity name="files" dataSource="null" rootEntity="false"
+            processor="FileListEntityProcessor"
+            baseDir="/Users/aparnaelangovan/Documents/Programming/python/aristo/corpus" fileName=".*\.pdf$"
+           
+            recursive="true">
+             <field column="file" name="id" />
+                <field column="fileSize" name="size" />
+                <field column="fileLastModified" name="lastModified" />
+              
+             
+                <entity dataSource="pdf"
+                    name="documentImport"
+                    processor="TikaEntityProcessor"
+                    url="${files.fileAbsolutePath}"
+                    format="text">
+                    
+                 
+                    <field name="title" column="resourceName" meta="true"/>
+                    <field column="text" name="text"/>
+ 
+                </entity>
+        </entity>
+</document>
+       
 </dataConfig>

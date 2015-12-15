@@ -799,6 +799,7 @@
      <lst name="defaults">
        <str name="echoParams">explicit</str>
        <int name="rows">10</int>
+
        <!-- Controls the distribution of a query to shards other than itself.
             Consider making 'preferLocalShards' true when:
               1) maxShardsPerNode > 1
@@ -876,6 +877,16 @@
        <str name="wt">json</str>
        <str name="indent">true</str>
        <str name="df">text</str>
+<str name="hl">true</str>
+<str name="hl.fl">text</str>
+<int name="hl.snippets">100</int>
+<int name="hl.fragsize">0</int>
+<str name="hl.simple.pre"><![CDATA[ <b style="background:yellow"><i> ]]></str>
+<str name="hl.simple.post"><![CDATA[ </i></b> ]]></str>
+<str name="hl.mergeContiguous">true</str>
+<str name="hl.fragListBuilder">single</str>
+<str name="hl.useFastVectorHighlighter">true</str>
+<str name="hl.usePhraseHighlighter">true</str>
      </lst>
   </requestHandler>
 
@@ -1512,7 +1523,7 @@
                   default="true"
                   class="solr.highlight.GapFragmenter">
         <lst name="defaults">
-          <int name="hl.fragsize">100</int>
+          <int name="hl.fragsize">1000</int>
         </lst>
       </fragmenter>
 
@@ -1584,7 +1595,7 @@
       </fragmentsBuilder>
       
       <boundaryScanner name="default" 
-                       default="true"
+                       default="false"
                        class="solr.highlight.SimpleBoundaryScanner">
         <lst name="defaults">
           <str name="hl.bs.maxScan">10</str>
@@ -1592,11 +1603,11 @@
         </lst>
       </boundaryScanner>
       
-      <boundaryScanner name="breakIterator" 
+      <boundaryScanner name="breakIterator" default="true"
                        class="solr.highlight.BreakIteratorBoundaryScanner">
         <lst name="defaults">
           <!-- type should be one of CHARACTER, WORD(default), LINE and SENTENCE -->
-          <str name="hl.bs.type">WORD</str>
+          <str name="hl.bs.type">SENTENCE</str>
           <!-- language and country are used when constructing Locale object.  -->
           <!-- And the Locale object will be used when getting instance of BreakIterator -->
           <str name="hl.bs.language">en</str>
@@ -1741,6 +1752,7 @@
   <!--
      <queryParser name="myparser" class="com.mycompany.MyQParserPlugin"/>
     -->
+<queryParser name="SurroundQParser" class="org.apache.solr.search.SurroundQParserPlugin"/>
 
   <!-- Function Parsers
 
