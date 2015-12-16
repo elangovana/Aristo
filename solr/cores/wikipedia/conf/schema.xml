@@ -128,8 +128,8 @@
      tokens
    -->   
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />         
-   <field name="title"  type="text_en" indexed="true" stored="true"/>
-   <field name="text" type="text_en" indexed="true" stored="true" omitNorms="true"/>
+   <field name="title"  type="text_en" indexed="true" stored="true" />
+   <field name="text" type="text_en" indexed="true" stored="true" omitNorms="true" storeOffsetsWithPositions="true"/>
  
   <!-- <field name="features" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="includes" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true" />

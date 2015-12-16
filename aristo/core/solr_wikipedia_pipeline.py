@@ -50,7 +50,7 @@ class SolrWikipediaPipeline:
             question = row[q_index + 1]
             max_score = -1
             correct_answer = "-"
-            for score_method in [self._get_score_answer_search_within_top_question_search_pages]:
+            for score_method in [self._get_search_score_weighted_question_snippets]:
 
             #for score_method in [self._get_search_score, self._get_score_answer_search_within_top_question_search_pages, self._get_search_score_weighted_answer]:
                 predicted_answers = []
@@ -196,18 +196,12 @@ class SolrWikipediaPipeline:
         a_query = ' '.join(a_keywords)
         print("--------")
         url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json&hl=true&hl.simple.pre=&hl.simple.post='
-        data = {'limit': 3, 'query': q_query}
+        data = {'limit': 3, 'query': q_query + " " + a_query}
         headers = {'Content-Type': 'application/json'}
         r = requests.post(url , simplejson.dumps(data), headers=headers)
-        print(q_query + ":" +  a_query)
+        print(data)
         rsp = simplejson.loads(r.text)
 
-        #search the answer within the top 3 pages
-        top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs'] ]) + ")"
-        print(top_page_ids)
-        url =  url + "&fq=id%3A+" + top_page_ids
-        data = {'limit': 10, 'query': a_query}
-        r = requests.post(url, simplejson.dumps(data), headers=headers)
 
         if textanalyser == None :
             textanalyser = TextAnalyser()

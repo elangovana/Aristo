@@ -48,7 +48,7 @@ name="document"
                     
                  
                     <field name="title" column="resourceName" meta="true"/>
-                    <field column="text" name="text"/>
+                    <field column="text" name="text" />
  
                 </entity>
         </entity>
