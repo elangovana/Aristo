@@ -12,10 +12,16 @@ from selenium.webdriver.support.wait import WebDriverWait
 class Ck12CorpusCreater:
     def _download_lesson_pdf(self, driver, lesson_url):
         driver.get(lesson_url)
-        WebDriverWait(driver, 20).until(lambda s: s.find_element(By.ID, "pdfonecolumndownload").is_displayed())
+        WebDriverWait(driver, 20).until(lambda s: s.find_element(By.ID, "pdfonecolumndownload").is_enabled())
         pdf_element = driver.find_element_by_id(
             "pdfonecolumndownload")  # EC.visibility_of_element_located ((By.CLASS_NAME, "toc_list")))
-        self._download_url(pdf_element.get_attribute('href'))
+        href = pdf_element.get_attribute('href')
+        if href.endswith("#"):
+            driver.find_element_by_id("pdfonecolumndownload")
+            pdf_element.click()
+            pdf_element.click()
+        else :
+            self._download_url(href)
 
     def _download_url(self, url):
         print(url)
@@ -31,11 +37,18 @@ class Ck12CorpusCreater:
             Warning("failed for " + url)
 
     def download_book(self, base_url, out_dir):
+        base_url="https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School/section/1.3"
         self.out_dir = out_dir
-        driver = webdriver.Firefox()
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('browser.download.folderList',2) #custom location
+        profile.set_preference('browser.download.dir', out_dir)
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk',"application/vnd.fd")
+        driver = webdriver.Firefox(profile)
         driver.get(base_url)
         self.sign_in(driver)
         driver.get(base_url)
+        self._download_lesson_pdf(driver, base_url)
+        return
         for chapter_url in [url for url in self.get_toc_urls(driver)]:
             driver.get(chapter_url)
             for lesson_url in [url for url in self.get_toc_urls(driver)]:
@@ -56,6 +69,7 @@ class Ck12CorpusCreater:
     def sign_in(self, driver):
         sign_in = driver.find_element_by_id("top_nav_signin")
         sign_in.click()
+        WebDriverWait(driver, 5).until(lambda s: driver.find_element(By.NAME, "login").is_enabled())
         login_name_element = driver.find_element(By.NAME, "login")
         login_name_element.send_keys("aparnaelangovan@yahoo.com")
         pwd_element = driver.find_element(By.NAME, "token")
@@ -79,6 +93,7 @@ class Ck12CorpusCreater:
 Ck12CorpusCreater().download_book("https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School/",
                                   os.path.join(os.path.dirname(__file__),
                                                "../../../corpus/CK-12-Life-Science-Concepts-For-Middle-School"))
+exit()
 Ck12CorpusCreater().download_book("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-High-School/",
                                   os.path.join(os.path.dirname(__file__),
                                                "../../../corpus/CK-12-Earth-Science-Concepts-For-High-School"))

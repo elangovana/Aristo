@@ -10,5 +10,5 @@ setup(
     author_email='',
     description='',
     tests_require = ['pytest', 'coverage'],
-    install_requires=['pandas', 'nltk', 'mwapi', 'simplejson', 'selenium',  ]
+    install_requires=['pandas', 'nltk', 'mwapi', 'simplejson', 'selenium', 'sklearn',  ]
 )
