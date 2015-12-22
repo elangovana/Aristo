@@ -22,8 +22,8 @@ class SolrWikipediaPipeline:
             self._analyser = TextAnalyser()
 
     def run_pipeline(self):
-        #self._calc()
-        self._calc_new()
+        self._calc()
+        #self._calc_new()
 
 
 
@@ -50,6 +50,7 @@ class SolrWikipediaPipeline:
         test_data.join(self.predictions, rsuffix="pred").to_csv(os.path.join(directory, "data_with_predictions.csv"))
 
     def _calc(self):
+        self.logger.info("running _calc")
         q_index = self._data.x.columns.get_loc("question")
         id_index =0
         for row in self._data.x.itertuples():
@@ -57,7 +58,7 @@ class SolrWikipediaPipeline:
             max_score = -1
             correct_answer = "-"
 
-            for score_method in [self._get_score_answer_search_within_top_question_search_pages_using_span]:
+            for score_method in [self._get_score_answer_search_within_top_question_search_pages]:
 
             #for score_method in [self._get_search_score, self._get_score_answer_search_within_top_question_search_pages, self._get_search_score_weighted_answer]:
                 predicted_answers = []
@@ -73,12 +74,13 @@ class SolrWikipediaPipeline:
             self.predictions.loc[row[id_index]].score = max_score
 
     def _calc_new(self):
+        self.logger.info("running _calc_new")
         q_index = self._data.x.columns.get_loc("question")
         id_index =0
         for row in self._data.x.itertuples():
             question = row[q_index + 1]
             correct_answer = "-"
-            score_method = self._extract_answer_question_relative #self._extract_answer_question_snippets
+            score_method = self._extract_answer_question_snippets #self._extract_answer_question_snippets
             indicies = [self._data.x.columns.get_loc(x) +1 for x in ["A","B","C","D"]]
 
             answers = [row[i] for i in indicies]
@@ -89,6 +91,7 @@ class SolrWikipediaPipeline:
 
 
     def _get_search_score(self, question, answer_choice):
+        self.logger.info("running _get_search_score")
         q_keywords = self._analyser.get_words_without_stopwords(question)
         a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
 
@@ -107,6 +110,7 @@ class SolrWikipediaPipeline:
         return score
 
     def _get_score_answer_search_within_top_question_search_pages_using_span(self, question, answer_choice):
+        self.logger.info("running _get_score_answer_search_within_top_question_search_pages_using_span")
 
         q_keywords = self._analyser.get_words_without_stopwords(question)
         a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
@@ -128,7 +132,7 @@ class SolrWikipediaPipeline:
         n =  2*len(a_keywords)
         qa_query = "{}w({})".format(n,qa_query)
         data = {'limit': 10, 'query': qa_query}
-        print(q_query + ":" + qa_query)
+        self.logger.info(q_query + ":" + qa_query)
         r = requests.post(url, simplejson.dumps(data), headers=headers)
 
         rsp = simplejson.loads(r.text)
@@ -152,6 +156,9 @@ class SolrWikipediaPipeline:
         :return: the score of the answer
         """
         # Get keywords from question and answer
+        self.logger.info("running _get_score_answer_search_within_top_question_search_pages")
+        self.logger.info("------------")
+
         q_keywords = self._analyser.get_words_without_stopwords(question)
         a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
         q_query = ' '.join(q_keywords)
@@ -160,25 +167,31 @@ class SolrWikipediaPipeline:
         # submit the question keywords to solr to obtain top 3 documents
         if None is url:
             url = 'http://localhost:8983/solr/wikipedia/select?fl=*%2Cscore&wt=json'
-        data = {'limit': 3, 'query': q_query + " " + a_query}
+        self.logger.info("question: " + question)
+        self.logger.info(answer_choice)
+        search_query =q_query + " " + a_query if (len(q_keywords )< 3) else q_query
+        self.logger.info("Search query {}".format(search_query))
+        data = {'limit': 3, 'query': search_query }
         headers = {'Content-Type': 'application/json'}
         r = requests.post(url , simplejson.dumps(data), headers=headers)
         rsp = simplejson.loads(r.text)
 
         # Submit the answer keywords to solr, but restricting the search to the top 3 pages for the question search
-        print(data)
+        self.logger.info(data)
         top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs'] ]) + ")"
-        print(top_page_ids)
+        top_page_titles = "(" + ' \n\t '.join([d['title'] for d in rsp['response']['docs'] ]) + ")"
+        self.logger.info(top_page_ids)
+        self.logger.info("Top page titles \n\t {}".format(top_page_titles))
         url =  url + "&fq=id%3A+" + top_page_ids
-        data = {'limit': 10, 'query': a_query }
+        data = {'limit': 2, 'query': a_query }
         r = requests.post(url, simplejson.dumps(data), headers=headers)
         rsp = simplejson.loads(r.text)
-        print(data)
+        self.logger.info(data)
 
         # Return the average score the solr results for the answer
         matching_docs =  rsp['response']['docs']
         score = sum([ d['score'] for d in matching_docs])/len(matching_docs) if (len(matching_docs) > 0) else 0
-        print(score)
+        self.logger.info(score)
         return score
 
     def _get_score_average_search_within_top_question_top_answer_search_pages(self, question, answer_choice):
@@ -232,6 +245,7 @@ class SolrWikipediaPipeline:
         return score
 
     def _extract_answer_question_snippets(self, question, answer_choices, textanalyser = None):
+        self.logger.info("running _extract_answer_question_snippets")
         """
         Calculates the score of the answer as follows
             1. Obtain key words from the question & the answer by removing stop words
@@ -245,9 +259,10 @@ class SolrWikipediaPipeline:
         :return: the score of the answer
         """
         # Get keywords from question and answer
-        self.logger.info("------------")
+        self.logger.info("------------------------------------------------")
+        self.logger.info("------------------------------------------------")
         self.logger.info( "question : " +  question )
-        self.logger.info( "answer choices : " +  answer_choices )
+        self.logger.info( "answer choices : {} " .format(  answer_choices ))
         q_keywords = self._analyser.get_words_without_stopwords(question)
         if textanalyser == None :
                 textanalyser = TextAnalyser()
@@ -256,33 +271,37 @@ class SolrWikipediaPipeline:
         max_question_score = -1
 
         for answer_choice in answer_choices:
+            self.logger.info("------------------------------------------------")
             a_keywords = self._analyser.get_words_without_stopwords(answer_choice)
             url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json&hl=true&hl.tag.pre=&hhl.tag.post='
-            rsp = self._submit_search_request(q_keywords + a_keywords, url)
+            search_key = q_keywords + a_keywords
+            self.logger.info("Searching : {}".format(search_key))
+            rsp = self._submit_search_request(search_key, url)
 
             snippets = self._extract_snippets_from_search_response(rsp)
-            print("all snippets for q & a :", "\n\n".join(snippets))
+            self.logger.info("\t All snippets for q & a {} search :\n\n \t*{}".format(search_key, "\n\t*".join(snippets)))
             (top_snippet, score) = textanalyser.get_top_n_similar_sentences_using_cosine(question,snippets)
             if (max_question_score <= score):
                 top_q_snippet =  top_snippet
                 max_question_score = score
-            print("top snippet matching question score : " , score,  top_snippet)
+            self.logger.info("Top snippet matching question answer score for q & a combination: {} \n\t\t\t{} " .format( score,  top_snippet))
 
         max_answer_score = -1
         top_answer="-"
         for answer_choice in answer_choices:
 
-
+            self.logger.info("_______________________________________________________")
             score = textanalyser.cosine_similiarity_score(top_q_snippet, answer_choice)
+            self.logger.info("Answer {} score {} matching against snippet \n\t  {} " .format(answer_choice, score,  top_q_snippet))
             if (max_answer_score <= score):
 
                 max_answer_score = score
                 top_answer=answer_choice
 
+        self.logger.info("-----------------**************---------------")
+        self.logger.info("Top question snippet : {}" .format( top_q_snippet))
+        self.logger.info("Top  answer : {} " .format(top_answer) )
 
-        print("top question snippet : ", top_q_snippet)
-        print("top  answer : ", top_answer)
-        print(top_answer)
         return top_answer
 
     def _extract_answer_question_relative(self, question, answer_choices, textanalyser = None):
