@@ -16,7 +16,9 @@ class Ck12CorpusCreater:
         pdf_element = driver.find_element_by_id(
             "pdfonecolumndownload")  # EC.visibility_of_element_located ((By.CLASS_NAME, "toc_list")))
         href = pdf_element.get_attribute('href')
+        print(href)
         if href.endswith("#"):
+            print("obtaining element pdfonecolumndownload")
             driver.find_element_by_id("pdfonecolumndownload")
             pdf_element.click()
             pdf_element.click()
@@ -24,7 +26,7 @@ class Ck12CorpusCreater:
             self._download_url(href)
 
     def _download_url(self, url):
-        print(url)
+
         r = requests.get(url, stream=True)
         self._ensure_dir(self.out_dir)
         if r.status_code == 200:
@@ -37,7 +39,7 @@ class Ck12CorpusCreater:
             Warning("failed for " + url)
 
     def download_book(self, base_url, out_dir):
-        base_url="https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School/section/1.3"
+        #base_url="https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School/section/1.3"
         self.out_dir = out_dir
         profile = webdriver.FirefoxProfile()
         profile.set_preference('browser.download.folderList',2) #custom location
@@ -47,8 +49,6 @@ class Ck12CorpusCreater:
         driver.get(base_url)
         self.sign_in(driver)
         driver.get(base_url)
-        self._download_lesson_pdf(driver, base_url)
-        return
         for chapter_url in [url for url in self.get_toc_urls(driver)]:
             driver.get(chapter_url)
             for lesson_url in [url for url in self.get_toc_urls(driver)]:
@@ -93,7 +93,7 @@ class Ck12CorpusCreater:
 Ck12CorpusCreater().download_book("https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School/",
                                   os.path.join(os.path.dirname(__file__),
                                                "../../../corpus/CK-12-Life-Science-Concepts-For-Middle-School"))
-exit()
+#exit()
 Ck12CorpusCreater().download_book("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-High-School/",
                                   os.path.join(os.path.dirname(__file__),
                                                "../../../corpus/CK-12-Earth-Science-Concepts-For-High-School"))

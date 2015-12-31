@@ -1,0 +1,31 @@
+<dataConfig>
+        <dataSource type="FileDataSource" encoding="UTF-8" datasource="wiki" />
+	<dataSource type="BinFileDataSource" name="pdf" />
+
+
+       <document>
+  <entity name="files" dataSource="null" rootEntity="false"
+            processor="FileListEntityProcessor"
+            baseDir="/Users/aparnaelangovan/Documents/Programming/python/aristo/corpus" fileName=".*\.pdf$"
+           
+            recursive="true">
+             <field column="file" name="id" />
+                <field column="fileSize" name="size" />
+                <field column="fileLastModified" name="lastModified" />
+                 <field column="file"  name="title" />
+
+                <entity dataSource="pdf"
+                    name="documentImport"
+                    processor="TikaEntityProcessor"
+                    url="${files.fileAbsolutePath}"
+                    format="text">
+                    
+
+
+                    <field column="text" name="text" />
+ 
+                </entity>
+        </entity>
+</document>
+       
+</dataConfig>
