@@ -823,7 +823,7 @@
             <str name="hl.tag.ellipsis">...</str>
             <bool name="hl.defaultSummary">true</bool>
             <str name=" hl.fl">text</str>
-            <int name="hl.maxAnalyzedChars">2147483647</int>
+            <int name="hl.maxAnalyzedChars">2147483646</int>
             <str name="hl.encoder">simple</str>
             <float name="hl.score.k1">1.2</float>
             <float name="hl.score.b">0.75</float>
@@ -832,7 +832,7 @@
             <str name="hl.bs.country"></str>
             <str name="hl.bs.variant"></str>
             <str name="hl.bs.type">SENTENCE</str>
-            <int name="hl.maxAnalyzedChars">10000</int>
+
 
 
         </lst>

@@ -26,15 +26,34 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
                 choice_index = self._data.x.columns.get_loc(choice)
                 choice_text = row[choice_index + 1]
                 passages = passages + self._get_search_score_weighted_question_snippets(question, choice_text)
-            self.logger.info("//////////////Passages retrieved  ///////////////")
-            self.logger.info("///////////////////////////////////////////////// \n: {} ".format(
-                "\n ///////////////////////////////////////////////// \n".join(passages)))
 
-            # Score passages based on question
+            # todo: some bad searches result in zero highlights
+            if len(passages) > 0:
+                #self._log_snippets(passages, message="Passages retrived")
+                top_n=3
+                top_n_passages = self._get_top_passages(passages,question, top_n=top_n)
+                self._log_snippets(top_n_passages, message="Top {} Passages retrieved".format(top_n))
+
+                # get top scoring answer from top passages
+                max_score = -1
+                correct_answer = "-"
+                for choice in ["A", "B", "C", "D"]:
+                    choice_index = self._data.x.columns.get_loc(choice)
+                    choice_text = row[choice_index + 1]
+                    score = self._get_matching_scores(top_n_passages,choice_text,1)[0]
+                    self.logger.info("Answer {} scored  {}".format( choice_text, score))
+                    if score > max_score:
+                        max_score = score
+                        correct_answer = choice
 
             self.predictions.loc[row[id_index]].answer = correct_answer
             self.predictions.loc[row[id_index]].score = max_score
             self.predictions.loc[row[id_index]].q_word_count = len(self._analyser.get_words_without_stopwords(question))
+
+    def _log_snippets(self, passages, message="Passages retrieved"):
+        self.logger.info("////////////// {} ///////////////".format(message))
+        self.logger.info("///////////////////////////////////////////////// \n: {} ".format(
+            "\n ///////////////////////////////////////////////// \n".join(passages)))
 
     def _get_search_score_weighted_question_snippets(self, question, answer_choice, textanalyser=None):
         """
@@ -79,7 +98,7 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
         is_short_q = (len(q_keywords) < 3)
         search_query = ' '.join(["{}^1000".format(qw) for qw in q_keywords]) + " " + a_query if is_short_q else q_query
         self.logger.info("Search query {}".format(search_query))
-        rsp = self._submit_search_request_by_query(q_query, url, limit=3)
+        rsp = self._submit_search_request_by_query(q_query, url, limit=5)
 
         # Obtain top 3 pages to restrict answer search on the top pages
         top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
@@ -99,3 +118,10 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
             snippets = self._extract_snippets_from_solr_json_response(rsp)
 
         return snippets
+
+
+    def _get_top_passages(self, passages, main_sentence, top_n):
+        return [ data for (data, score) in self._analyser.get_top_n_similar_sentences_using_cosine(main_sentence,passages,top_n=top_n)]
+
+    def _get_matching_scores(self, sentences, main_sentence, top_n):
+        return [ score for (data, score) in self._analyser.get_top_n_similar_sentences_using_cosine(main_sentence,sentences,top_n=top_n)]

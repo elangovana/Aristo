@@ -193,6 +193,6 @@ class TextAnalyser:
 
         top_n = top_n if len(item_sim_scores) >= top_n else len(item_sim_scores)
         item_sim_scores = [] if top_n == 0 else \
-            sorted(item_sim_scores, key=lambda tup: tup[1], reverse=True)[0:top_n][0]
+            sorted(item_sim_scores, key=lambda tup: tup[1], reverse=True)[0:top_n]
 
         return item_sim_scores

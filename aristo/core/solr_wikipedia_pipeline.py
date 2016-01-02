@@ -56,7 +56,7 @@ class SolrWikipediaPipeline:
             question = row[q_index + 1]
             max_score = -1
             correct_answer = "-"
-
+            self.logger.info("running question id {}".format(row[0]))
             for choice in ["A", "B", "C", "D"]:
                 choice_index = self._data.x.columns.get_loc(choice)
                 choice_text = row[choice_index + 1]
@@ -103,7 +103,7 @@ class SolrWikipediaPipeline:
         is_short_q = (len(q_keywords) < 3)
         search_query = ' '.join(["{}^1000".format(qw) for qw in q_keywords]) + " " + a_query if is_short_q else q_query
         self.logger.info("Search query {}".format(search_query))
-        rsp = self._submit_search_request_by_query(q_query, url, limit=3)
+        rsp = self._submit_search_request_by_query(q_query, url, limit=5)
 
         top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
         top_page_titles = "(" + ' \n\t '.join([d['title'] for d in rsp['response']['docs']]) + ")"
@@ -112,7 +112,7 @@ class SolrWikipediaPipeline:
 
         fq = "id:" + top_page_ids
         self.logger.info("Url used to search answer {}".format(url))
-        rsp = self._submit_search_request_by_query(a_query, url, limit=2, fq=fq)
+        rsp = self._submit_search_request_by_query(a_query, url, limit=3, fq=fq)
 
         # Return the average score the solr results for the answer
         matching_docs = rsp['response']['docs']
