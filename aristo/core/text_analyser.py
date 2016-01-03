@@ -141,7 +141,10 @@ class TextAnalyser:
 
     def _normalize(self, text):
         remove_punctuation_map = dict((ord(char), None) for char in string.punctuation)
-        return self._stem_tokens(nltk.word_tokenize(text.lower().translate(remove_punctuation_map)))
+
+
+        tokens = self._stem_tokens(nltk.word_tokenize(text.lower().translate(remove_punctuation_map)))
+        return  tokens
 
     def cosine_similiarity_score(self, text1, text2):
         vectorizer = TfidfVectorizer(tokenizer=self._normalize, stop_words='english')

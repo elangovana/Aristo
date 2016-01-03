@@ -18,8 +18,6 @@ class SolrWikipediaAllAnswerThenQuestionPipeline(SolrWikipediaPipeline):
         id_index = 0
         for row in self._data.x.itertuples():
             question = row[q_index + 1]
-            max_score = -1
-            correct_answer = "-"
 
             self.logger.info("running question id {}".format(row[0]))
 
@@ -88,7 +86,7 @@ class SolrWikipediaAllAnswerThenQuestionPipeline(SolrWikipediaPipeline):
         #get top   pages with answers
         fq=""
         #if len(q_keywords) < 5:
-        rsp = self._submit_search_request_by_query(answer_choices_query, url, limit=300)
+        rsp = self._submit_search_request_by_query(answer_choices_query, url, limit=50)
         top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
         fq = "id:" + top_page_ids
 

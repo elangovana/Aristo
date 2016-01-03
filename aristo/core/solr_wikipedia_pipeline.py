@@ -136,7 +136,8 @@ class SolrWikipediaPipeline:
 
         data = {'limit': limit, 'query': query, 'filter': fq}
         headers = {'Content-Type': 'application/json'}
-        self.logger.info(data)
+        self.logger.info("Query {}, limit {}, fq {}... truncated".format(query, limit, str(fq)[:50]))
+        self.logger.debug(data)
         r = requests.post(url, simplejson.dumps(data), headers=headers)
         if r.status_code != 200:
             raise RuntimeError(r.text)

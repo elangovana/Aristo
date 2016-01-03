@@ -817,7 +817,7 @@
             <bool name="preferLocalShards">false</bool>
 
             <str name="hl">true</str>
-            <int name="hl.snippets">5</int>
+            <int name="hl.snippets">3</int>
             <str name="hl.tag.pre">&lt;em&gt;</str>
             <str name="hl.tag.post">&lt;/em&gt;</str>
             <str name="hl.tag.ellipsis">...</str>

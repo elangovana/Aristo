@@ -17,35 +17,32 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
         q_index = self._data.x.columns.get_loc("question")
         id_index = 0
         for row in self._data.x.itertuples():
+            self.logger.info("--------------------------Question Id: {}------------------------------".format(row[0]))
             question = row[q_index + 1]
-            max_score = -1
-            correct_answer = "-"
-            passages = []
-            # For each question answer combination, obtain relevant passages
+
+            answer_choices_dict = {}
             for choice in ["A", "B", "C", "D"]:
                 choice_index = self._data.x.columns.get_loc(choice)
                 choice_text = row[choice_index + 1]
-                passages = passages + self._get_search_score_weighted_question_snippets(question, choice_text)
+                answer_choices_dict[choice] = choice_text
 
-            # todo: some bad searches result in zero highlights
+            passages = self._get_snippets_answer_search_within_top_question_search_pages_with_all(question, answer_choices_dict)
+
+            self._log_snippets(passages, message="Passages retrieved")
+
+            # get top scoring answer from top passages
+            max_score = -1
+            correct_answer = "A"
             if len(passages) > 0:
-                #self._log_snippets(passages, message="Passages retrived")
-                top_n=3
-                top_n_passages = self._get_top_passages(passages,question, top_n=top_n)
-                self._log_snippets(top_n_passages, message="Top {} Passages retrieved".format(top_n))
-
-                # get top scoring answer from top passages
-                max_score = -1
-                correct_answer = "-"
-                for choice in ["A", "B", "C", "D"]:
-                    choice_index = self._data.x.columns.get_loc(choice)
-                    choice_text = row[choice_index + 1]
-                    score = self._get_matching_scores(top_n_passages,choice_text,1)[0]
+                for choice in answer_choices_dict.keys():
+                    choice_text = answer_choices_dict[choice]
+                    score = self._get_matching_scores(passages,question + " " + choice_text,1)[0]
                     self.logger.info("Answer {} scored  {}".format( choice_text, score))
                     if score > max_score:
                         max_score = score
                         correct_answer = choice
-
+            self.logger.info("Question : {}".format( question))
+            self.logger.info("Correct answer : {}, {}, score:{}".format(correct_answer, answer_choices_dict[correct_answer], max_score))
             self.predictions.loc[row[id_index]].answer = correct_answer
             self.predictions.loc[row[id_index]].score = max_score
             self.predictions.loc[row[id_index]].q_word_count = len(self._analyser.get_words_without_stopwords(question))
@@ -55,70 +52,89 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
         self.logger.info("///////////////////////////////////////////////// \n: {} ".format(
             "\n ///////////////////////////////////////////////// \n".join(passages)))
 
-    def _get_search_score_weighted_question_snippets(self, question, answer_choice, textanalyser=None):
-        """
-        Returns relevant passages
-            1. Obtain key words from the question & the answer by removing stop words
-            2. Obtain top 3 pages matching the search results for the questions along with the matching snippets
-            3. Search solr for the answer key words, but restrict the search to the top 3 pages from the question search.
-               The highlight query includes question and answer
-            4. Return highlights.
 
-        :type textanalyser: TextAnalyser
+
+    def _get_snippets_answer_search_within_top_question_search_pages_with_all(self, question, answer_choices_dictionary, url=None):
+        """
+        Calculates the score of the answer as follows
+            1. Obtain key words from the question & the answer by removing stop words
+            2. Obtain top 3 pages matching the search results for the questions
+            3. Search solr for the answer key words, but restrict the search to the top 3 pages from the question search
+            4. Return the average score for the answer search
+
+        :param url: solr url
         :param question: The question string
         :param answer_choice: The answer string
         :return: the score of the answer
         """
-        # Init
-        if textanalyser is None:
-            textanalyser = TextAnalyser()
-        url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json&hl=true&hl.tag.pre=&hl.tag.post='
+        # Get keywords from question and answer
+        self.logger.info("running _get_score_answer_search_within_top_question_search_pages")
+        self.logger.info("------------")
+        self.logger.info("question: " + question)
 
-        self.logger.info("------------------------------------------------")
-        self.logger.info("running _get_search_score_weighted_question_snippets")
-        self.logger.info("------------------------------------------------")
-        self.logger.info("question : " + question)
-        self.logger.info("answer choice : {} ".format(answer_choice))
-
-        # Key search keywords keywords
         exlude_words = self._get_science_stop_words()
 
         q_keywords = [word for word in self._analyser.get_words_without_stopwords(question) \
                       if word.lower() not in exlude_words]
         q_keywords = self._remove_duplicates_preserve_order(q_keywords)
-        a_keywords = [word for word in self._analyser.get_words_without_stopwords(answer_choice) \
-                      if word.lower() not in exlude_words and word.lower() not in q_keywords]
+
         q_query = ' '.join(q_keywords)
-        a_query = ' '.join(a_keywords)
 
-        self.logger.info("Search query question keywords : {} ".format(q_keywords))
-        self.logger.info("Search query answer keywords : {} ".format(a_keywords))
+        answer_choices = ""
+        for answer_choice in answer_choices_dictionary.keys():
+            answer_choices = answer_choices + " " + answer_choices_dictionary[answer_choice]
 
-        # Search question, if length of question too short, include answer
-        is_short_q = (len(q_keywords) < 3)
-        search_query = ' '.join(["{}^1000".format(qw) for qw in q_keywords]) + " " + a_query if is_short_q else q_query
-        self.logger.info("Search query {}".format(search_query))
-        rsp = self._submit_search_request_by_query(q_query, url, limit=5)
+        answer_choices_keywords = [word for word in self._analyser.get_words_without_stopwords(answer_choices) \
+                      if word.lower() not in exlude_words and  word.lower() not in q_keywords]
+        answer_choices_keywords = self._remove_duplicates_preserve_order(answer_choices_keywords)
 
-        # Obtain top 3 pages to restrict answer search on the top pages
+        answer_choices_query =  q_query + " " + ' '.join(answer_choices_keywords)
+
+        if None is url:
+            url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json'
+
+        # Get scope, include all answers and questions in the search and get a long list of pages
+        rsp = self._submit_search_request_by_query(answer_choices_query, url, limit=50)
         top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
-        top_page_titles = "(" + ' \n\t '.join([d['title'] for d in rsp['response']['docs']]) + ")"
-        self.logger.info(top_page_ids)
-        self.logger.info("Top page titles \n\t {}".format(top_page_titles))
         fq = "id:" + top_page_ids
 
-        snippets = []
+        # Shortlist the previous long list based on just the question keywords
+        #hlqurl = url + "&hl=true&hl.tag.pre=&hl.tag.post=&hl.q=" + q_query
+        self.logger.info("Search query {}".format(q_query))
+        rsp = self._submit_search_request_by_query(q_query, url, limit=5, fq=fq)
 
-        if len(a_keywords) > 0:
-            # highlight question and answer
-            hlqurl = url + "&hl.q=" + a_query + " " + q_query
-            self.logger.info("Url used to search answer {}".format(hlqurl))
-            rsp = self._submit_search_request_by_query(a_query, hlqurl, limit=2, fq=fq)
-            # extract answer
-            snippets = self._extract_snippets_from_solr_json_response(rsp)
+        top_page_titles = "(" + ' \n\t '.join([d['title'] for d in rsp['response']['docs']]) + ")"
+        self.logger.info("Top page titles \n\t {}".format(top_page_titles))
+
+        snippets = self._extract_snippets_from_solr_json_response(rsp)
+
+        # top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
+        # fq = "id:" + top_page_ids
+        # snippets = []
+        # for key in answer_choices_dictionary.keys():
+        #     answer_choice = answer_choices_dictionary[key]
+        #     a_keywords = [word for word in self._analyser.get_words_without_stopwords(answer_choice) \
+        #               if word.lower() not in exlude_words and word.lower() not in q_keywords]
+        #     if len(a_keywords) == 0 : continue
+        #     a_query = ' '.join(a_keywords)
+        #     hlqurl = url + "&hl=true&hl.tag.pre=&hl.tag.post=&hl.q=" + q_query + " " +a_query
+        #     rsp = self._submit_search_request_by_query(a_query, hlqurl, limit=2, fq=fq)
+        #
+        #     snippets = snippets + self._extract_snippets_from_solr_json_response(rsp)
+
+
+        snippets = self.clean_snippets(snippets)
 
         return snippets
 
+
+    def clean_snippets(self, snippets):
+        import re
+        result =[]
+        for snippet in snippets:
+            # result = result + [re.sub('\[|\]|\(|\)|{|}|=|&|:|\||<|>', ' ', snippet)]
+            result.append(re.sub('[\|]' , ' ', snippet))
+        return result
 
     def _get_top_passages(self, passages, main_sentence, top_n):
         return [ data for (data, score) in self._analyser.get_top_n_similar_sentences_using_cosine(main_sentence,passages,top_n=top_n)]

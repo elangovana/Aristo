@@ -1,6 +1,7 @@
 import logging
 from aristo.core.aristo_data import AristoData
 from aristo.core.similarity_pipeline import SimilarityPipeline
+from aristo.core.solr_wikipedia_all_answer_then_question_pipeline import SolrWikipediaAllAnswerThenQuestionPipeline
 from aristo.core.solr_wikipedia_pipeline import SolrWikipediaPipeline
 from aristo.core.text_analyser import TextAnalyser
 import os
@@ -18,7 +19,7 @@ def setup_log(dir):
 # create a logging format
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #handler.setFormatter(formatter)
+    handler.setFormatter(formatter)
 
 # add the handlers to the logger
 
@@ -32,7 +33,7 @@ def run_test_data(data_csv):
     aristo_data = AristoData(data_csv)
 
     aristo_data.print_summary()
-    pipeline = SolrWikipediaPipeline(data=aristo_data, logger = logger)
+    pipeline = SolrWikipediaAllAnswerThenQuestionPipeline(data=aristo_data, logger = logger)
     pipeline.run_pipeline()
 
 
