@@ -1,33 +1,10 @@
-from aristo.core.aristo_data import AristoData
-from aristo.core.similarity_pipeline import SimilarityPipeline
-from aristo.core.solr_wikipedia_all_answer_then_question_pipeline import SolrWikipediaAllAnswerThenQuestionPipeline
-from aristo.core.solr_wikipedia_pipeline import SolrWikipediaPipeline
-from aristo.core.solr_wikipedia_snippet_pipeline import SolrWikipediaSnippetPipeline
-from aristo.core.text_analyser import TextAnalyser
 import os
 import time
 
-import logging
-
-def setup_log(dir):
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-# create a file handler
-
-    handler = logging.FileHandler(os.path.join(dir, "log.log"))
-    handler.setLevel(logging.INFO)
-
-# create a logging format
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-# add the handlers to the logger
-
-    logger.addHandler(handler)
-    return logger
-
+from aristo.core.aristo_data import AristoData
+from aristo.core.setup_logger import setup_log
+from aristo.core.solr_wikipedia_all_answer_then_question_pipeline import SolrWikipediaAllAnswerThenQuestionPipeline
+from aristo.core.solr_wikipedia_snippet_pipeline import SolrWikipediaSnippetPipeline
 
 
 def run_train_data(train_data_csv):
@@ -37,7 +14,7 @@ def run_train_data(train_data_csv):
     #aristo_train_data = AristoData(train_data_csv, range(0,500))
     aristo_train_data = AristoData(train_data_csv)
     aristo_train_data.print_summary()
-    pipeline = SolrWikipediaSnippetPipeline(data=aristo_train_data, logger = logger)
+    pipeline = SolrWikipediaAllAnswerThenQuestionPipeline(data=aristo_train_data, logger = logger)
     pipeline.run_pipeline()
 
 

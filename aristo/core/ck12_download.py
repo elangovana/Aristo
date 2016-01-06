@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from aristo.core.setup_logger import setup_log
+from aristo.core.utilities import Utilities
 
 
 class Ck12CorpusCreater(ContextDecorator):
@@ -24,10 +25,10 @@ class Ck12CorpusCreater(ContextDecorator):
         self.logger =logger
         if logger is None:
             log_dir = os.path.join(os.path.dirname(__file__),"../../../outputdata/Ck12CorpusCreater_{}".format(time.strftime('%Y%m%d_%H%M%S')))
-            self.ensure_dir(log_dir)
+            Utilities.create_dir(log_dir)
             self.logger = setup_log(log_dir, "Ck12CorpusCreater")
 
-        self.ensure_dir(out_dir)
+        Utilities.create_dir(out_dir)
 
         self.profile = webdriver.FirefoxProfile()
         self.profile.set_preference('browser.download.folderList',2) #custom location
@@ -59,7 +60,7 @@ class Ck12CorpusCreater(ContextDecorator):
 
     def _download_url(self, url, out_dir):
         r = requests.get(url, stream=True)
-        self.ensure_dir(out_dir)
+        Utilities.create_dir(out_dir)
         if r.status_code == 200:
             filename = os.path.join(out_dir, url.rsplit('/', 1)[-1])
             with open(filename, 'wb') as f:
@@ -91,10 +92,11 @@ class Ck12CorpusCreater(ContextDecorator):
         self.driver.quit()
 
     def get_toc_urls(self):
-        WebDriverWait(self.driver, 10).until(lambda s: s.find_element(By.CLASS_NAME,
-                                                                 "toc_list").is_displayed())  # EC.visibility_of_element_located ((By.CLASS_NAME, "toc_list")))
-        toc_list_element = self.driver.find_element_by_class_name("toc_list")
         try:
+            WebDriverWait(self.driver, 10).until(lambda s: s.find_element(By.CLASS_NAME,
+                                                                 "toc_list").is_displayed())  # EC.visibility_of_element_located ((By.CLASS_NAME, "toc_list")))
+            toc_list_element = self.driver.find_element_by_class_name("toc_list")
+
             WebDriverWait(self.driver, 5).until(lambda s: toc_list_element.find_element(By.XPATH, "./li").is_displayed())
         except selenium.common.exceptions.TimeoutException as ex:
             self.logger.warn("Timeout exception {}, assumming no toc for url {}..".format(ex, self.driver.current_url))
@@ -122,16 +124,7 @@ class Ck12CorpusCreater(ContextDecorator):
         sign_in_btn.click()
         time.sleep(20)
 
-    @staticmethod
-    def ensure_dir(dirname):
-        """
-        Ensure that a named directory exists; if it does not, attempt to create it.
-        """
-        try:
-            os.makedirs(dirname)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+
 
 
 def download(url, credentials, logger ):
@@ -142,32 +135,32 @@ def download(url, credentials, logger ):
         ck12CorpusCreater.download_book(url)
 
 
-def GetCredentialsForCorpus():
-    userid = input("Enter the login name for ck12\n")
-    password = getpass.getpass();
-    return (userid, password)
+
 
 
 log_dir = os.path.join(os.path.dirname(__file__),"../../../outputdata/Ck12CorpusCreater_{}".format(time.strftime('%Y%m%d_%H%M%S')))
-Ck12CorpusCreater.ensure_dir(log_dir)
+Utilities.create_dir(log_dir)
 log = setup_log(log_dir, "Ck12CorpusCreater")
 
+try:
 
-credentialsCk12 = GetCredentialsForCorpus()
-
-
-download("https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School",credentialsCk12, log)
-download("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-High-School", credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-Middle-School", credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Physical-Science-Concepts-For-Middle-School",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Biology-Concepts",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Chemistry-Basic",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Chemistry-Concepts-Intermediate",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Physics-Concepts---Intermediate",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Understanding-Biodiversity",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-Biology-Advanced-Concepts/",credentialsCk12,log)
-download("https://www.ck12.org/book/CK-12-21st-Century-Physics-A-Compilation-of-Contemporary-and-Emerging-Technologies/",credentialsCk12,log)
-download("https://www.ck12.org/book/Peoples-Physics-Book-Basic/",credentialsCk12,log)
-download("https://www.ck12.org/book/Peoples-Physics-Concepts/",credentialsCk12,log)
-download("https://www.ck12.org/book/Physics-From-Stargazers-to-Starships/",credentialsCk12,log)
-download("https://www.ck12.org/book/From-Vitamins-to-Baked-Goods%253A-Real-Applications-of-Organic-Chemistry/",credentialsCk12,log)
+    credentialsCk12 = Utilities.get_credentials("https://www.ck12.org/")
+    #
+    # download("https://www.ck12.org/book/CK-12-Life-Science-Concepts-For-Middle-School",credentialsCk12, log)
+    # download("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-High-School", credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Earth-Science-Concepts-For-Middle-School", credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Physical-Science-Concepts-For-Middle-School",credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Biology-Concepts",credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Chemistry-Basic",credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Chemistry-Concepts-Intermediate",credentialsCk12,log)
+    # download("https://www.ck12.org/book/CK-12-Physics-Concepts---Intermediate",credentialsCk12,log)
+    ####download("https://www.ck12.org/book/CK-12-Understanding-Biodiversity",credentialsCk12,log)
+    #download("https://www.ck12.org/book/CK-12-Biology-Advanced-Concepts/",credentialsCk12,log)
+    #download("https://www.ck12.org/book/CK-12-21st-Century-Physics-A-Compilation-of-Contemporary-and-Emerging-Technologies/",credentialsCk12,log)
+    download("https://www.ck12.org/book/Peoples-Physics-Book-Basic/",credentialsCk12,log)
+    download("https://www.ck12.org/book/Peoples-Physics-Concepts/",credentialsCk12,log)
+    download("https://www.ck12.org/book/Physics-From-Stargazers-to-Starships/",credentialsCk12,log)
+    download("https://www.ck12.org/book/From-Vitamins-to-Baked-Goods%253A-Real-Applications-of-Organic-Chemistry/",credentialsCk12,log)
+except Exception as ex:
+    log.error("Completed with error {}".format(ex))
+    print(ex)

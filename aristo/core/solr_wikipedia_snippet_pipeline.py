@@ -91,7 +91,7 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
         answer_choices_query =  q_query + " " + ' '.join(answer_choices_keywords)
 
         if None is url:
-            url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json'
+            url = 'http://localhost:8983/solr/ck12/select?fl=title%2Cid%2C+score&wt=json'
 
         # Get scope, include all answers and questions in the search and get a long list of pages
         rsp = self._submit_search_request_by_query(answer_choices_query, url, limit=50)
@@ -106,21 +106,21 @@ class SolrWikipediaSnippetPipeline(SolrWikipediaPipeline):
         top_page_titles = "(" + ' \n\t '.join([d['title'] for d in rsp['response']['docs']]) + ")"
         self.logger.info("Top page titles \n\t {}".format(top_page_titles))
 
-        snippets = self._extract_snippets_from_solr_json_response(rsp)
+        #snippets = self._extract_snippets_from_solr_json_response(rsp)
 
-        # top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
-        # fq = "id:" + top_page_ids
-        # snippets = []
-        # for key in answer_choices_dictionary.keys():
-        #     answer_choice = answer_choices_dictionary[key]
-        #     a_keywords = [word for word in self._analyser.get_words_without_stopwords(answer_choice) \
-        #               if word.lower() not in exlude_words and word.lower() not in q_keywords]
-        #     if len(a_keywords) == 0 : continue
-        #     a_query = ' '.join(a_keywords)
-        #     hlqurl = url + "&hl=true&hl.tag.pre=&hl.tag.post=&hl.q=" + q_query + " " +a_query
-        #     rsp = self._submit_search_request_by_query(a_query, hlqurl, limit=2, fq=fq)
-        #
-        #     snippets = snippets + self._extract_snippets_from_solr_json_response(rsp)
+        top_page_ids = "(" + ' OR '.join([d['id'] for d in rsp['response']['docs']]) + ")"
+        fq = "id:" + top_page_ids
+        snippets = []
+        for key in answer_choices_dictionary.keys():
+            answer_choice = answer_choices_dictionary[key]
+            a_keywords = [word for word in self._analyser.get_words_without_stopwords(answer_choice) \
+                      if word.lower() not in exlude_words and word.lower() not in q_keywords]
+            if len(a_keywords) == 0 : continue
+            a_query = ' '.join(a_keywords)
+            hlqurl = url + "&hl=true&hl.tag.pre=&hl.tag.post=&hl.q=" + q_query + " " +a_query
+            rsp = self._submit_search_request_by_query(a_query, hlqurl, limit=2, fq=fq)
+
+            snippets = snippets + self._extract_snippets_from_solr_json_response(rsp)
 
 
         snippets = self.clean_snippets(snippets)

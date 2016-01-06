@@ -80,7 +80,7 @@ class SolrWikipediaAllAnswerThenQuestionPipeline(SolrWikipediaPipeline):
 
         # submit the question keywords to solr to obtain top 3 documents
         if None is url:
-            url = 'http://localhost:8983/solr/wikipedia/select?fl=title%2Cid%2C+score&wt=json'
+            url = 'http://localhost:8983/solr/ck12/select?fl=title%2Cid%2C+score&wt=json'
 
 
         #get top   pages with answers

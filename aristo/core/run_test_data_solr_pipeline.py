@@ -1,30 +1,13 @@
 import logging
 from aristo.core.aristo_data import AristoData
+from aristo.core.setup_logger import setup_log
 from aristo.core.similarity_pipeline import SimilarityPipeline
 from aristo.core.solr_wikipedia_all_answer_then_question_pipeline import SolrWikipediaAllAnswerThenQuestionPipeline
 from aristo.core.solr_wikipedia_pipeline import SolrWikipediaPipeline
+from aristo.core.solr_wikipedia_snippet_pipeline import SolrWikipediaSnippetPipeline
 from aristo.core.text_analyser import TextAnalyser
 import os
 import time
-
-def setup_log(dir):
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-# create a file handler
-
-    handler = logging.FileHandler(os.path.join(dir, "log.log"))
-    handler.setLevel(logging.INFO)
-
-# create a logging format
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-# add the handlers to the logger
-
-    logger.addHandler(handler)
-    return logger
 
 def run_test_data(data_csv):
     out_dir=os.path.join(os.path.dirname(__file__),"../../../outputdata/test_{}".format(time.strftime('%Y%m%d_%H%M%S')))
